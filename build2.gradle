@@ -1,0 +1,7 @@
+task hello1 {
+String greet="hello ant"
+ant.echo(message: "greeting from ant")
+ant.property(name: "build1" , value: "2.1")
+println ant.properties['build1']
+println 'Hello world1 '
+}
