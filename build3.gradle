@@ -1,0 +1,44 @@
+apply plugin: 'maven'
+group = "org.sunil.com"
+version = "1.0-SNAPSHOT"
+ 
+configurations{
+    allJars
+}
+task discoverAllJars{
+    ext.discoveredFiles = []
+    doLast{
+        file("build/libs").eachFile{file ->
+            if(file.name.endsWith("jar")){
+                println "found file ${file.name}" 
+                discoveredFiles << file
+                artifacts{
+                    allJars file
+                }   
+            }
+        }   
+    }
+}
+task configureUploadAllJars{
+    dependsOn discoverAllJars
+    doLast{
+        uploadAllJars {
+           repositories {  
+                mavenDeployer {  
+                    repository(url: 'http://local:8081/repository/maven-snapshots') {  
+                        authentication(userName: 'admin', password: 'admin/shacode');  
+                    }
+                    discoverAllJars.discoveredFiles.each{discoveredFile ->
+                        def filterName = discoveredFile.name - ".jar"
+                        addFilter(filterName) { artifact, file ->
+                            file.name == discoveredFile.name
+                        }
+                        pom(filterName).artifactId = filterName 
+                    }
+                }  
+            }  
+        }   
+   }
+}
+ 
+uploadAllJars.dependsOn configureUploadAllJars,build
